@@ -108,16 +108,6 @@ auto RemoveVertexes(
     return newMatrix;
 }
 
-TVector ReadSizes(int amount = 4, const std::string& inputFile = "sizes.txt") {
-    std::ifstream input(inputFile);
-    int size = 0;
-    TVector result(amount);
-    for (int i = 0; i < amount; ++i) {
-        input >> result[i];
-    }
-    return result;
-}
-
 struct GraphState {
     TMatrix matrix;
     TVector color;
@@ -129,9 +119,9 @@ struct GraphState {
 
 GraphState InitializeGraphState() {
     GraphState state;
-    state.matrix = NUtils::ReadMatrix(SIZE, "matrix.txt");
+    state.matrix = NUtils::ReadMatrix(SIZE, MATRIX_FILE);
     state.color.resize(SIZE, 0);
-    state.sizes = ReadSizes();
+    state.sizes = NUtils::ReadSizes(AMOUNT, SIZES_FILE);
 
     for (int i = 0; i < SIZE; ++i) {
         state.localToGlobalNumber[i] = i;

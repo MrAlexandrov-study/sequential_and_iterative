@@ -23,6 +23,16 @@ inline TMatrix ReadMatrix(int n, const std::string& inputFile) {
     return result;
 }
 
+inline TVector ReadSizes(int amount, const std::string& inputFile) {
+    std::ifstream input(inputFile);
+    int size = 0;
+    TVector result(amount);
+    for (int i = 0; i < amount; ++i) {
+        input >> result[i];
+    }
+    return result;
+}
+
 template<typename T>
 std::ostream& operator<<(std::ostream& out, const std::vector<T>& vector) {
     for (const auto& i : vector) {
