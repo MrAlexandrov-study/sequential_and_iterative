@@ -1,14 +1,12 @@
 #include "consts.hpp"
 #include "utils.hpp"
 
-// #include "project_template.hpp"
 #include <algorithm>
 
 #include <boost/range/numeric.hpp>
 #include <boost/range/algorithm/min_element.hpp>
 
 #include <cassert>
-#include <fstream>
 #include <optional>
 #include <unordered_map>
 #include <unordered_set>
