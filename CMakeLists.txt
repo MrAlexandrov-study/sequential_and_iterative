@@ -10,6 +10,8 @@ set(CMAKE_CXX_STANDARD 20)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+find_package(Boost COMPONENTS range algorithm)
+
 file(GLOB SRC_FILES "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
 add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/main.cpp)
