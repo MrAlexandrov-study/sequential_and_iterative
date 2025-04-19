@@ -25,7 +25,6 @@ inline TMatrix ReadMatrix(int n, const std::string& inputFile) {
 
 inline TVector ReadSizes(int amount, const std::string& inputFile) {
     std::ifstream input(inputFile);
-    int size = 0;
     TVector result(amount);
     for (int i = 0; i < amount; ++i) {
         input >> result[i];
