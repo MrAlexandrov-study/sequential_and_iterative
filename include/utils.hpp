@@ -48,4 +48,19 @@ std::ostream& operator<<(std::ostream& out, const std::unordered_set<T>& vector)
     return out;
 }
 
+double CalculateLayoutCost(const TMatrix& matrix, const TVector& layout) {
+    double cost = 0.0;
+    int n = matrix.size();
+
+    for (int i = 0; i < n; ++i) {
+        for (int j = i + 1; j < n; ++j) {
+            if (matrix[i][j] > 0 && layout[i] != layout[j]) {
+                cost += matrix[i][j];
+            }
+        }
+    }
+
+    return cost;
+}
+
 } // namespace NUtils
