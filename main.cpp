@@ -24,23 +24,19 @@ void RunLayoutAlgorithms(const TMatrix& matrix, const TVector& sizes) {
     double sequentialCost = NUtils::CalculateLayoutCost(matrix, sequentialLayout);
     std::cout << "Sequential layout cost: " << sequentialCost << "\n\n";
 
-    // Run iterative layout algorithm
     std::cout << "=== Iterative Layout Algorithm ===\n";
     TVector iterativeLayout = RunIterativeLayout(matrix, sizes);
     double iterativeCost = NUtils::CalculateLayoutCost(matrix, iterativeLayout);
     std::cout << "Iterative layout cost: " << iterativeCost << "\n";
 
-    // Compare results
     std::cout << "\n=== Comparison ===\n";
     std::cout << "Sequential layout cost: " << sequentialCost << "\n";
     std::cout << "Iterative layout cost: " << iterativeCost << "\n";
-    std::cout << "Improvement: " << (sequentialCost - iterativeCost) / sequentialCost * 100 << "%\n";
 }
 
 } // anonymous namespace
 
 int main() {
-    // Initialize random number generator
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
     TMatrix matrix;
