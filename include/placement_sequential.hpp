@@ -10,7 +10,6 @@
 #include <cmath>
 #include <iomanip>
 
-// Sequential placement algorithm based on the Python implementation
 class SequentialPlacement {
 private:
     TMatrix matrix;
@@ -22,7 +21,6 @@ public:
     SequentialPlacement(const TMatrix& matrix, int rows = 4, int cols = 5)
         : matrix(matrix), rows(rows), cols(cols), n(matrix.size()) {}
 
-    // Calculate row sums (rho) for the matrix
     TVector calculateRho() const {
         TVector rho(n, 0);
         for (int i = 0; i < n; ++i) {
@@ -33,7 +31,6 @@ public:
         return rho;
     }
 
-    // Print the current state of the algorithm
     void printStep(int step, const std::vector<int>& selected, const TVector& rho, const std::vector<double>& K) const {
         std::cout << "\nStep " << step << ", layouted [";
         for (size_t i = 0; i < selected.size(); ++i) {
@@ -42,14 +39,12 @@ public:
         }
         std::cout << "]:" << std::endl;
 
-        // Print header
         std::cout << std::setw(6) << " ";
         for (int j = 0; j < n; ++j) {
             std::cout << std::setw(6) << "v" << j + 1;
         }
         std::cout << std::setw(8) << "rho" << std::setw(8) << "K" << std::endl;
 
-        // Print matrix with rho and K values
         for (int i = 0; i < n; ++i) {
             std::cout << "v" << i + 1 << std::setw(3) << " ";
             for (int j = 0; j < n; ++j) {
@@ -57,7 +52,6 @@ public:
             }
             std::cout << std::setw(8) << rho[i];
 
-            // Print K value or * for selected vertices
             if (std::find(selected.begin(), selected.end(), i) != selected.end()) {
                 std::cout << std::setw(8) << "*";
             } else {
@@ -67,18 +61,17 @@ public:
         }
     }
 
-    // Run the sequential placement algorithm
     std::vector<std::vector<int>> run(bool printOutput = true) {
         TVector rho = calculateRho();
-        std::vector<int> selected = {0};  // Start with vertex 0
-        std::vector<int> order = {0};     // Track the order of selection
+        std::vector<int> selected = {0};
+        std::vector<int> order = {0};
 
         for (int step = 1; step < n; ++step) {
             std::vector<double> K(n, std::numeric_limits<double>::quiet_NaN());
 
             for (int i = 0; i < n; ++i) {
                 if (std::find(selected.begin(), selected.end(), i) != selected.end()) {
-                    continue;  // Skip already selected vertices
+                    continue;
                 }
 
                 double P_sel = 0.0;
@@ -102,7 +95,6 @@ public:
                 }
             }
 
-            // Find candidates with maxK value
             std::vector<int> candidates;
             for (int i = 0; i < n; ++i) {
                 if (std::find(selected.begin(), selected.end(), i) == selected.end() &&
@@ -111,13 +103,11 @@ public:
                 }
             }
 
-            // Select the candidate with the smallest index
             int next_v = *std::min_element(candidates.begin(), candidates.end());
             selected.push_back(next_v);
             order.push_back(next_v);
         }
 
-        // Reshape the order into a grid
         std::vector<std::vector<int>> grid(rows, std::vector<int>(cols));
         for (int r = 0; r < rows; ++r) {
             for (int c = 0; c < cols; ++c) {

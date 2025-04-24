@@ -13,7 +13,6 @@
 #include <unordered_set>
 #include <tuple>
 
-// Iterative placement algorithm based on the Python implementation
 class IterativePlacement {
 private:
     TMatrix matrix;
@@ -29,7 +28,6 @@ public:
         rho = calculateRho();
     }
 
-    // Calculate row sums (rho) for the matrix
     TVector calculateRho() const {
         TVector rho(n, 0);
         for (int i = 0; i < n; ++i) {
@@ -40,7 +38,6 @@ public:
         return rho;
     }
 
-    // Get position (row, col) of a vertex in the grid
     std::pair<int, int> getPosition(int vertex) const {
         for (int r = 0; r < rows; ++r) {
             for (int c = 0; c < cols; ++c) {
@@ -49,14 +46,12 @@ public:
                 }
             }
         }
-        return {-1, -1}; // Not found
+        return {-1, -1};
     }
 
-    // Compute the total cost Q of the placement
     double computeQ() const {
         double Q = 0.0;
 
-        // Create a map of vertex to position
         std::vector<std::pair<int, int>> positions(n);
         for (int r = 0; r < rows; ++r) {
             for (int c = 0; c < cols; ++c) {
@@ -65,7 +60,6 @@ public:
             }
         }
 
-        // Calculate total cost
         for (int i = 0; i < n; ++i) {
             for (int j = 0; j < n; ++j) {
                 int w = matrix[i][j];
@@ -78,10 +72,9 @@ public:
             }
         }
 
-        return Q / 2.0; // Divide by 2 because each edge is counted twice
+        return Q / 2.0;
     }
 
-    // Compute Li for a vertex
     double computeLi(int i) const {
         auto [r_i, c_i] = getPosition(i);
         double total = 0.0;
@@ -98,12 +91,10 @@ public:
         return total / rho[i];
     }
 
-    // Run the iterative placement algorithm
     std::vector<std::vector<int>> run(bool printOutput = true) {
         std::vector<std::vector<int>> currentGrid = grid;
         std::unordered_set<std::string> seen;
 
-        // Convert grid to string for seen set
         auto gridToString = [](const std::vector<std::vector<int>>& g) {
             std::string result;
             for (const auto& row : g) {
@@ -123,55 +114,43 @@ public:
         }
 
         while (true) {
-            // Calculate L values for all vertices
             std::vector<double> L(n);
             for (int i = 0; i < n; ++i) {
                 L[i] = computeLi(i);
             }
 
-            // Find vertex with worst L value
             int m = std::distance(L.begin(), std::max_element(L.begin(), L.end()));
             double worst_L = L[m];
 
-            // Find candidates for swap
             std::vector<std::tuple<int, double, double, double, std::vector<std::vector<int>>>> candidates;
 
             for (int k = 0; k < n; ++k) {
                 if (k == m) continue;
 
-                // Create a copy of the current grid
                 auto g = currentGrid;
 
-                // Get positions of vertices m and k
                 auto [r_m, c_m] = getPosition(m);
                 auto [r_k, c_k] = getPosition(k);
 
-                // Swap vertices m and k
                 std::swap(g[r_m][c_m], g[r_k][c_k]);
 
-                // Check if this configuration has been seen before
                 std::string gridStr = gridToString(g);
                 if (seen.find(gridStr) != seen.end()) {
                     continue;
                 }
 
-                // Create a temporary placement object to compute new values
                 IterativePlacement temp(matrix, g);
 
-                // Calculate new L value for vertex m
                 double new_L = temp.computeLi(m);
                 double delta_L = new_L - worst_L;
 
-                // Calculate new total cost
                 double new_Q = temp.computeQ();
 
-                // Add to candidates if it improves both L and Q
                 if (delta_L < 0 && new_Q < Q_current) {
                     candidates.push_back(std::make_tuple(k, delta_L, new_L, new_Q, g));
                 }
             }
 
-            // If no improving candidates, we're done
             if (candidates.empty()) {
                 if (printOutput) {
                     std::cout << "\nEnded" << std::endl;
@@ -179,7 +158,6 @@ public:
                 break;
             }
 
-            // Sort candidates by delta_L and then by vertex index
             std::sort(candidates.begin(), candidates.end(),
                 [](const auto& a, const auto& b) {
                     if (std::get<1>(a) != std::get<1>(b)) {
@@ -188,7 +166,6 @@ public:
                     return std::get<0>(a) < std::get<0>(b);
                 });
 
-            // Select the best candidate
             auto [k_best, best_delta, L_new, Q_new, grid_new] = candidates[0];
 
             iteration++;
@@ -218,7 +195,6 @@ public:
                 }
             }
 
-            // Update current grid and Q
             currentGrid = grid_new;
             seen.insert(gridToString(currentGrid));
             Q_current = Q_new;
