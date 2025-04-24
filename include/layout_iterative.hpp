@@ -224,9 +224,23 @@ void PrintFinalResults(
     int iterations
 ) {
     std::cout << "Final layout cost after " << iterations << " iterations: " << bestCost << "\n";
-    std::cout << "\nFinal component assignments:\n";
+
+    std::unordered_map<int, std::vector<int>> componentToVertices;
     for (int i = 0; i < matrix.size(); ++i) {
-        std::cout << "Vertex " << i << ": Component " << bestLayout[i] << "\n";
+        componentToVertices[bestLayout[i]].push_back(i);
+    }
+
+    for (int component = 1; component <= componentToVertices.size(); ++component) {
+        if (componentToVertices.find(component) != componentToVertices.end()) {
+            std::cout << "Component " << component << " vertices: ";
+
+            std::sort(componentToVertices[component].begin(), componentToVertices[component].end());
+
+            for (const auto& vertex : componentToVertices[component]) {
+                std::cout << vertex << " ";
+            }
+            std::cout << "\n";
+        }
     }
 }
 
