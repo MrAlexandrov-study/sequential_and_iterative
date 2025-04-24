@@ -5,7 +5,8 @@
 constexpr int SIZE = 20;
 constexpr int AMOUNT = 4;
 
-constexpr auto MATRIX_FILE = "matrix.txt";
+constexpr auto LAYOUT_MATRIX_FILE = "layout_matrix.txt";
+constexpr auto PLACEMENT_MATRIX_FILE = "placement_matrix.txt";
 constexpr auto SIZES_FILE = "sizes.txt";
 
 using Type = int;

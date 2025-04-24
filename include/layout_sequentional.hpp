@@ -115,7 +115,7 @@ struct GraphState {
 
 GraphState InitializeGraphStateFromFiles() {
     GraphState state;
-    state.matrix = NUtils::ReadMatrix(SIZE, MATRIX_FILE);
+    state.matrix = NUtils::ReadMatrix(SIZE, LAYOUT_MATRIX_FILE);
     state.size = SIZE;
     state.color.resize(SIZE, 0);
     state.sizes = NUtils::ReadSizes(AMOUNT, SIZES_FILE);

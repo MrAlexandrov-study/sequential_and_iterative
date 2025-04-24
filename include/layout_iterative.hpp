@@ -3,7 +3,7 @@
 #include "consts.hpp"
 #include "utils.hpp"
 
-#include "sequentional.hpp"
+#include "layout_sequentional.hpp"
 
 #include <cmath>
 #include <iostream>

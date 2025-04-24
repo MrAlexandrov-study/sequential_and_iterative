@@ -1,7 +1,7 @@
 #include "consts.hpp"
 #include "utils.hpp"
-#include "sequentional.hpp"
-#include "iterative.hpp"
+#include "layout_sequentional.hpp"
+#include "layout_iterative.hpp"
 #include "placement_sequential.hpp"
 #include "placement_iterative.hpp"
 
@@ -69,35 +69,14 @@ int main() {
     TVector sizes;
 
     // Read matrix for layout algorithms
-    matrix = NUtils::ReadMatrix(SIZE, MATRIX_FILE);
+    matrix = NUtils::ReadMatrix(SIZE, LAYOUT_MATRIX_FILE);
     sizes = NUtils::ReadSizes(AMOUNT, SIZES_FILE);
 
     // Run layout algorithms
     RunLayoutAlgorithms(matrix, sizes);
 
-    // Create matrix for placement algorithms from Python example
-    TMatrix placementMatrix = {
-        {0, 1, 0, 0, 0, 1, 1, 0, 3, 1, 1, 1, 1, 3, 0, 0, 0, 0, 0, 1},
-        {1, 0, 1, 0, 1, 2, 3, 0, 2, 1, 1, 0, 0, 0, 0, 0, 2, 1, 1, 1},
-        {0, 1, 0, 0, 1, 0, 0, 0, 0, 2, 1, 0, 1, 0, 0, 0, 0, 0, 2, 0},
-        {0, 0, 0, 0, 3, 0, 1, 0, 0, 0, 0, 0, 3, 0, 2, 0, 0, 1, 1, 2},
-        {0, 1, 1, 3, 0, 1, 0, 2, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 3},
-        {1, 2, 0, 0, 1, 0, 2, 0, 1, 0, 0, 0, 0, 0, 1, 3, 0, 0, 0, 3},
-        {1, 3, 0, 1, 0, 2, 0, 0, 1, 3, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1},
-        {0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 1, 0, 0, 0, 2, 0, 0, 1, 0, 0},
-        {3, 2, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0},
-        {1, 1, 2, 0, 0, 0, 3, 1, 0, 0, 0, 1, 0, 1, 0, 0, 4, 1, 0, 2},
-        {1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 0, 0},
-        {1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 1, 0, 0, 0, 0},
-        {1, 0, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 3},
-        {3, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 3, 1, 0, 0, 1, 0, 0, 0, 0},
-        {0, 0, 0, 2, 1, 1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 3, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0},
-        {0, 2, 0, 0, 0, 0, 0, 0, 1, 4, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1},
-        {0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 4, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-        {0, 1, 2, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0},
-        {1, 1, 0, 2, 3, 3, 1, 0, 0, 2, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0},
-    };
+    // Read the same matrix for placement algorithms
+    TMatrix placementMatrix = NUtils::ReadMatrix(SIZE, PLACEMENT_MATRIX_FILE);
 
     // Run placement algorithms
     RunPlacementAlgorithms(placementMatrix);
