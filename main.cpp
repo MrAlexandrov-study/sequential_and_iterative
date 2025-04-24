@@ -40,17 +40,14 @@ void RunPlacementAlgorithms(const TMatrix& matrix) {
     std::cout << "\n=== Placement Algorithms ===\n";
     std::cout << "Matrix size: " << matrix.size() << "x" << matrix[0].size() << "\n\n";
 
-    // Run sequential placement
     std::cout << "=== Sequential Placement Algorithm ===\n";
     SequentialPlacement seqPlacement(matrix);
     auto initialGrid = seqPlacement.run();
 
-    // Run iterative placement
     std::cout << "\n=== Iterative Placement Algorithm ===\n";
     IterativePlacement iterPlacement(matrix, initialGrid);
     auto finalGrid = iterPlacement.run();
 
-    // Print final result
     std::cout << "\n=== Final Placement ===\n";
     for (size_t r = 0; r < finalGrid.size(); ++r) {
         for (size_t c = 0; c < finalGrid[r].size(); ++c) {
@@ -68,17 +65,13 @@ int main() {
     TMatrix matrix;
     TVector sizes;
 
-    // Read matrix for layout algorithms
     matrix = NUtils::ReadMatrix(SIZE, LAYOUT_MATRIX_FILE);
     sizes = NUtils::ReadSizes(AMOUNT, SIZES_FILE);
 
-    // Run layout algorithms
     RunLayoutAlgorithms(matrix, sizes);
 
-    // Read the same matrix for placement algorithms
     TMatrix placementMatrix = NUtils::ReadMatrix(SIZE, PLACEMENT_MATRIX_FILE);
 
-    // Run placement algorithms
     RunPlacementAlgorithms(placementMatrix);
 
     return 0;
