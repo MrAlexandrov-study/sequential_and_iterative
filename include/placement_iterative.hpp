@@ -181,7 +181,7 @@ public:
                               << ", Q_new=" << std::fixed << std::setprecision(1) << Qn << std::endl;
                 }
 
-                std::cout << "  Choose change v" << m + 1 << "↔v" << k_best + 1
+                std::cout << "  Choose change v" << m + 1 << "<->v" << k_best + 1
                           << ", delta L=" << std::fixed << std::setprecision(3) << best_delta
                           << ", L_new=" << std::fixed << std::setprecision(3) << L_new
                           << ", Q_new=" << std::fixed << std::setprecision(1) << Q_new << std::endl;
