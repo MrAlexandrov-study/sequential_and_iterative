@@ -28,6 +28,208 @@ double CalculateMoveCost(const TMatrix& matrix, const TVector& layout, int verte
     return costDiff;
 }
 
+void InitializeLayout(
+    const TMatrix& matrix,
+    const TVector& sizes,
+    TVector& currentLayout,
+    TVector& bestLayout,
+    double& bestCost,
+    std::unordered_map<int, int>& componentSizes,
+    std::unordered_map<int, int>& componentCounts,
+    bool printOutput
+) {
+    bestLayout = RunSequentialLayout(matrix, sizes, false);
+    bestCost = NUtils::CalculateLayoutCost(matrix, bestLayout);
+
+    if (printOutput) {
+        std::cout << "Initial layout cost: " << bestCost << "\n";
+    }
+
+    currentLayout = bestLayout;
+
+    for (int i = 0; i < sizes.size(); ++i) {
+        componentSizes[i + 1] = sizes[i];
+    }
+
+    componentCounts.clear();
+    for (const auto& component : currentLayout) {
+        componentCounts[component]++;
+    }
+}
+
+bool TrySwapVertices(
+    const TMatrix& matrix,
+    TVector& currentLayout,
+    TVector& bestLayout,
+    double& bestCost,
+    int iterations,
+    bool printOutput
+) {
+    bool improved = false;
+
+    for (int v1 = 0; v1 < matrix.size(); ++v1) {
+        int comp1 = currentLayout[v1];
+
+        for (int v2 = 0; v2 < matrix.size(); ++v2) {
+            int comp2 = currentLayout[v2];
+
+            if (comp1 == comp2) continue;
+
+            currentLayout[v1] = comp2;
+            currentLayout[v2] = comp1;
+
+            double newCost = NUtils::CalculateLayoutCost(matrix, currentLayout);
+
+            if (newCost < bestCost) {
+                bestCost = newCost;
+                bestLayout = currentLayout;
+                improved = true;
+
+                if (printOutput) {
+                    std::cout << "Iteration " << iterations
+                              << ": Swapped vertex " << v1 << " (component " << comp1
+                              << ") with vertex " << v2 << " (component " << comp2
+                              << "), new cost: " << bestCost << "\n";
+                }
+            } else {
+                currentLayout[v1] = comp1;
+                currentLayout[v2] = comp2;
+            }
+        }
+    }
+
+    return improved;
+}
+
+bool TryMoveVertices(
+    const TMatrix& matrix,
+    TVector& currentLayout,
+    TVector& bestLayout,
+    double& bestCost,
+    std::unordered_map<int, int>& componentCounts,
+    std::unordered_map<int, int>& componentSizes,
+    int iterations,
+    bool printOutput
+) {
+    bool improved = false;
+
+    for (int vertex = 0; vertex < matrix.size(); ++vertex) {
+        int currentComponent = currentLayout[vertex];
+
+        for (int newComponent = 1; newComponent <= componentSizes.size(); ++newComponent) {
+            if (newComponent == currentComponent) {
+                continue;
+            }
+
+            if (componentCounts[currentComponent] <= componentSizes[currentComponent]) {
+                continue;
+            }
+
+            if (componentCounts[newComponent] >= componentSizes[newComponent]) {
+                continue;
+            }
+
+            double costDiff = CalculateMoveCost(matrix, currentLayout, vertex, newComponent);
+
+            if (costDiff < 0) {
+                currentLayout[vertex] = newComponent;
+                componentCounts[currentComponent]--;
+                componentCounts[newComponent]++;
+
+                double newCost = bestCost + costDiff;
+                bestCost = newCost;
+                bestLayout = currentLayout;
+                improved = true;
+
+                if (printOutput) {
+                    std::cout << "Iteration " << iterations
+                              << ": Moved vertex " << vertex
+                              << " from component " << currentComponent
+                              << " to component " << newComponent
+                              << ", new cost: " << bestCost << "\n";
+                }
+
+                break;
+            }
+        }
+    }
+
+    return improved;
+}
+
+bool TryRandomMoves(
+    const TMatrix& matrix,
+    TVector& currentLayout,
+    TVector& bestLayout,
+    double& bestCost,
+    std::unordered_map<int, int>& componentCounts,
+    std::unordered_map<int, int>& componentSizes,
+    int iterations,
+    bool printOutput
+) {
+    bool improved = false;
+
+    for (int attempt = 0; attempt < 5; ++attempt) {
+        int v1 = rand() % matrix.size();
+        int v2 = rand() % matrix.size();
+
+        int comp1 = currentLayout[v1];
+        int comp2 = currentLayout[v2];
+
+        if (comp1 == comp2) continue;
+
+        if (componentCounts[comp1] <= componentSizes[comp1] ||
+            componentCounts[comp2] <= componentSizes[comp2]) {
+            continue;
+        }
+
+        currentLayout[v1] = comp2;
+        currentLayout[v2] = comp1;
+
+        double newCost = NUtils::CalculateLayoutCost(matrix, currentLayout);
+
+        if (newCost < bestCost) {
+            bestCost = newCost;
+            bestLayout = currentLayout;
+            improved = true;
+
+            if (printOutput) {
+                std::cout << "Random move in iteration " << iterations
+                          << " improved solution, new cost: " << bestCost << "\n";
+            }
+
+            break;
+        } else {
+            double p = exp(-(newCost - bestCost) / (iterations * 0.1));
+            if ((double)rand() / RAND_MAX < p) {
+                if (printOutput) {
+                    std::cout << "Random move accepted in iteration " << iterations
+                              << " despite worse cost: " << newCost << "\n";
+                }
+                break;
+            } else {
+                currentLayout[v1] = comp1;
+                currentLayout[v2] = comp2;
+            }
+        }
+    }
+
+    return improved;
+}
+
+void PrintFinalResults(
+    const TMatrix& matrix,
+    const TVector& bestLayout,
+    double bestCost,
+    int iterations
+) {
+    std::cout << "Final layout cost after " << iterations << " iterations: " << bestCost << "\n";
+    std::cout << "\nFinal component assignments:\n";
+    for (int i = 0; i < matrix.size(); ++i) {
+        std::cout << "Vertex " << i << ": Component " << bestLayout[i] << "\n";
+    }
+}
+
 TVector RunIterativeLayout(const TMatrix& matrix, const TVector& sizes, int maxIterations = 1000, bool printOutput = true) {
     if (printOutput) {
         std::cout << "Iterative Layout Algorithm\n";
@@ -38,168 +240,62 @@ TVector RunIterativeLayout(const TMatrix& matrix, const TVector& sizes, int maxI
         std::cout << "\n";
     }
 
-    TVector bestLayout = RunSequentialLayout(matrix, sizes, false);
-    double bestCost = NUtils::CalculateLayoutCost(matrix, bestLayout);
-
-    if (printOutput) {
-        std::cout << "Initial layout cost: " << bestCost << "\n";
-    }
-
-    TVector currentLayout = bestLayout;
-
+    TVector bestLayout;
+    TVector currentLayout;
+    double bestCost = 0;
     std::unordered_map<int, int> componentSizes;
-    for (int i = 0; i < sizes.size(); ++i) {
-        componentSizes[i + 1] = sizes[i];
-    }
-
-    // Count vertices in each component
     std::unordered_map<int, int> componentCounts;
-    for (const auto& component : currentLayout) {
-        componentCounts[component]++;
-    }
 
-    // Iterative improvement
+    InitializeLayout(
+        matrix,
+        sizes,
+        currentLayout,
+        bestLayout,
+        bestCost,
+        componentSizes,
+        componentCounts,
+        printOutput
+    );
+
     int iterations = 0;
     int noImprovementCount = 0;
-    const int maxNoImprovement = 10; // Allow some iterations without improvement
+    const int maxNoImprovement = 10;
 
     while (noImprovementCount < maxNoImprovement && iterations < maxIterations) {
         iterations++;
         bool improvedThisIteration = false;
 
-        // Try swapping pairs of vertices between different components
-        for (int v1 = 0; v1 < matrix.size(); ++v1) {
-            int comp1 = currentLayout[v1];
+        improvedThisIteration |= TrySwapVertices(
+            matrix,
+            currentLayout,
+            bestLayout,
+            bestCost,
+            iterations,
+            printOutput
+        );
 
-            for (int v2 = 0; v2 < matrix.size(); ++v2) {
-                int comp2 = currentLayout[v2];
+        improvedThisIteration |= TryMoveVertices(
+            matrix,
+            currentLayout,
+            bestLayout,
+            bestCost,
+            componentCounts,
+            componentSizes,
+            iterations,
+            printOutput
+        );
 
-                // Only consider vertices in different components
-                if (comp1 == comp2) continue;
-
-                // Try swapping v1 and v2
-                currentLayout[v1] = comp2;
-                currentLayout[v2] = comp1;
-
-                double newCost = NUtils::CalculateLayoutCost(matrix, currentLayout);
-
-                if (newCost < bestCost) {
-                    bestCost = newCost;
-                    bestLayout = currentLayout;
-                    improvedThisIteration = true;
-
-                    if (printOutput) {
-                        std::cout << "Iteration " << iterations
-                                  << ": Swapped vertex " << v1 << " (component " << comp1
-                                  << ") with vertex " << v2 << " (component " << comp2
-                                  << "), new cost: " << bestCost << "\n";
-                    }
-                } else {
-                    // Revert the swap
-                    currentLayout[v1] = comp1;
-                    currentLayout[v2] = comp2;
-                }
-            }
-        }
-
-        // Try moving individual vertices
-        for (int vertex = 0; vertex < matrix.size(); ++vertex) {
-            int currentComponent = currentLayout[vertex];
-
-            // Try each other component
-            for (int newComponent = 1; newComponent <= sizes.size(); ++newComponent) {
-                if (newComponent == currentComponent) {
-                    continue;
-                }
-
-                // Skip if this would make the current component too small
-                if (componentCounts[currentComponent] <= componentSizes[currentComponent]) {
-                    continue;
-                }
-
-                // Skip if the target component is already full
-                if (componentCounts[newComponent] >= componentSizes[newComponent]) {
-                    continue;
-                }
-
-                // Calculate cost change without actually moving
-                double costDiff = CalculateMoveCost(matrix, currentLayout, vertex, newComponent);
-
-                if (costDiff < 0) {  // Only make the move if it improves the solution
-                    // Make the move
-                    currentLayout[vertex] = newComponent;
-                    componentCounts[currentComponent]--;
-                    componentCounts[newComponent]++;
-
-                    double newCost = bestCost + costDiff;
-                    bestCost = newCost;
-                    bestLayout = currentLayout;
-                    improvedThisIteration = true;
-
-                    if (printOutput) {
-                        std::cout << "Iteration " << iterations
-                                  << ": Moved vertex " << vertex
-                                  << " from component " << currentComponent
-                                  << " to component " << newComponent
-                                  << ", new cost: " << bestCost << "\n";
-                    }
-
-                    break;  // Move to next vertex
-                }
-            }
-        }
-
-        // Try random moves to escape local optima
         if (!improvedThisIteration && noImprovementCount > maxNoImprovement / 2) {
-            // Make a random perturbation to escape local optima
-            for (int attempt = 0; attempt < 5; ++attempt) {
-                int v1 = rand() % matrix.size();
-                int v2 = rand() % matrix.size();
-
-                int comp1 = currentLayout[v1];
-                int comp2 = currentLayout[v2];
-
-                if (comp1 == comp2) continue;
-
-                // Check if swap would violate size constraints
-                if (componentCounts[comp1] <= componentSizes[comp1] ||
-                    componentCounts[comp2] <= componentSizes[comp2]) {
-                    continue;
-                }
-
-                // Make the swap
-                currentLayout[v1] = comp2;
-                currentLayout[v2] = comp1;
-
-                double newCost = NUtils::CalculateLayoutCost(matrix, currentLayout);
-
-                if (newCost < bestCost) {
-                    bestCost = newCost;
-                    bestLayout = currentLayout;
-                    improvedThisIteration = true;
-
-                    if (printOutput) {
-                        std::cout << "Random move in iteration " << iterations
-                                  << " improved solution, new cost: " << bestCost << "\n";
-                    }
-
-                    break;
-                } else {
-                    // Keep the move anyway with some probability to escape local optima
-                    double p = exp(-(newCost - bestCost) / (iterations * 0.1));
-                    if ((double)rand() / RAND_MAX < p) {
-                        if (printOutput) {
-                            std::cout << "Random move accepted in iteration " << iterations
-                                      << " despite worse cost: " << newCost << "\n";
-                        }
-                        break;
-                    } else {
-                        // Revert the swap
-                        currentLayout[v1] = comp1;
-                        currentLayout[v2] = comp2;
-                    }
-                }
-            }
+            improvedThisIteration |= TryRandomMoves(
+                matrix,
+                currentLayout,
+                bestLayout,
+                bestCost,
+                componentCounts,
+                componentSizes,
+                iterations,
+                printOutput
+            );
         }
 
         if (improvedThisIteration) {
@@ -210,11 +306,7 @@ TVector RunIterativeLayout(const TMatrix& matrix, const TVector& sizes, int maxI
     }
 
     if (printOutput) {
-        std::cout << "Final layout cost after " << iterations << " iterations: " << bestCost << "\n";
-        std::cout << "\nFinal component assignments:\n";
-        for (int i = 0; i < matrix.size(); ++i) {
-            std::cout << "Vertex " << i << ": Component " << bestLayout[i] << "\n";
-        }
+        PrintFinalResults(matrix, bestLayout, bestCost, iterations);
     }
 
     return bestLayout;
