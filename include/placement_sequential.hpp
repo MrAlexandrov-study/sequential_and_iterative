@@ -19,7 +19,7 @@ private:
     int n;
 
 public:
-    SequentialPlacement(const TMatrix& matrix, int rows = 4, int cols = 5) 
+    SequentialPlacement(const TMatrix& matrix, int rows = 4, int cols = 5)
         : matrix(matrix), rows(rows), cols(cols), n(matrix.size()) {}
 
     // Calculate row sums (rho) for the matrix
@@ -35,7 +35,7 @@ public:
 
     // Print the current state of the algorithm
     void printStep(int step, const std::vector<int>& selected, const TVector& rho, const std::vector<double>& K) const {
-        std::cout << "\n[seq] Шаг " << step << ", размещены [";
+        std::cout << "\nStep " << step << ", layouted [";
         for (size_t i = 0; i < selected.size(); ++i) {
             std::cout << "v" << selected[i] + 1;
             if (i < selected.size() - 1) std::cout << ", ";
@@ -56,7 +56,7 @@ public:
                 std::cout << std::setw(6) << matrix[i][j];
             }
             std::cout << std::setw(8) << rho[i];
-            
+
             // Print K value or * for selected vertices
             if (std::find(selected.begin(), selected.end(), i) != selected.end()) {
                 std::cout << std::setw(8) << "*";
@@ -75,48 +75,48 @@ public:
 
         for (int step = 1; step < n; ++step) {
             std::vector<double> K(n, std::numeric_limits<double>::quiet_NaN());
-            
+
             for (int i = 0; i < n; ++i) {
                 if (std::find(selected.begin(), selected.end(), i) != selected.end()) {
                     continue;  // Skip already selected vertices
                 }
-                
+
                 double P_sel = 0.0;
                 for (int sel : selected) {
                     P_sel += matrix[i][sel];
                 }
-                
+
                 K[i] = 2 * P_sel - rho[i];
             }
-            
+
             if (printOutput) {
                 printStep(step, selected, rho, K);
             }
-            
+
             // Find maximum K value
             double maxK = -std::numeric_limits<double>::infinity();
             for (int i = 0; i < n; ++i) {
-                if (std::find(selected.begin(), selected.end(), i) == selected.end() && 
+                if (std::find(selected.begin(), selected.end(), i) == selected.end() &&
                     !std::isnan(K[i]) && K[i] > maxK) {
                     maxK = K[i];
                 }
             }
-            
+
             // Find candidates with maxK value
             std::vector<int> candidates;
             for (int i = 0; i < n; ++i) {
-                if (std::find(selected.begin(), selected.end(), i) == selected.end() && 
+                if (std::find(selected.begin(), selected.end(), i) == selected.end() &&
                     !std::isnan(K[i]) && std::abs(K[i] - maxK) < 1e-6) {
                     candidates.push_back(i);
                 }
             }
-            
+
             // Select the candidate with the smallest index
             int next_v = *std::min_element(candidates.begin(), candidates.end());
             selected.push_back(next_v);
             order.push_back(next_v);
         }
-        
+
         // Reshape the order into a grid
         std::vector<std::vector<int>> grid(rows, std::vector<int>(cols));
         for (int r = 0; r < rows; ++r) {
@@ -125,9 +125,9 @@ public:
                 grid[r][c] = order[idx];
             }
         }
-        
+
         if (printOutput) {
-            std::cout << "\nСтартовое размещение " << rows << "×" << cols << " (номера вершин):" << std::endl;
+            std::cout << "\nStart layout " << rows << "×" << cols << " (edge numbers):" << std::endl;
             for (int r = 0; r < rows; ++r) {
                 for (int c = 0; c < cols; ++c) {
                     std::cout << std::setw(3) << grid[r][c] + 1;
@@ -135,7 +135,7 @@ public:
                 std::cout << std::endl;
             }
         }
-        
+
         return grid;
     }
 };
