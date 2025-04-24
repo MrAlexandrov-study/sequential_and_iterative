@@ -10,6 +10,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <unordered_map>
 
 
 TVector CountRho(const TMatrix& matrix) {
