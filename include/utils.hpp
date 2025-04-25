@@ -60,7 +60,7 @@ double CalculateLayoutCost(const TMatrix& matrix, const TVector& layout) {
                 cost += matrix[i][j];
             }
         }
-        
+
         // Process edges where i is the larger index
         for (int j = 0; j < i; ++j) {
             if (matrix[j][i] > 0 && layout[j] != layout[i]) {
@@ -68,7 +68,7 @@ double CalculateLayoutCost(const TMatrix& matrix, const TVector& layout) {
             }
         }
     }
-    
+
     // This approach counts each edge exactly once
     return cost;
 }
