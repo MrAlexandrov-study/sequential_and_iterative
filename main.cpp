@@ -69,9 +69,9 @@ int main() {
 
     RunLayoutAlgorithms(matrix, sizes);
 
-    TMatrix placementMatrix = NUtils::ReadMatrix(SIZE, PLACEMENT_MATRIX_FILE);
+    // TMatrix placementMatrix = NUtils::ReadMatrix(SIZE, PLACEMENT_MATRIX_FILE);
 
-    RunPlacementAlgorithms(placementMatrix);
+    // RunPlacementAlgorithms(placementMatrix);
 
     return 0;
 }
