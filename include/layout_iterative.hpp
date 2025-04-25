@@ -13,14 +13,28 @@ double CalculateMoveCost(const TMatrix& matrix, const TVector& layout, int verte
     int currentComponent = layout[vertex];
     int n = matrix.size();
 
-    for (int i = 0; i < n; ++i) {
-        if (i == vertex) continue;
+    // Process edges where vertex is the smaller index
+    for (int j = vertex + 1; j < n; ++j) {
+        if (matrix[vertex][j] > 0) {
+            if (layout[j] == currentComponent) {
+                // Edge will go from same component to different component
+                costDiff += matrix[vertex][j];
+            } else if (layout[j] == newComponent) {
+                // Edge will go from different component to same component
+                costDiff -= matrix[vertex][j];
+            }
+        }
+    }
 
-        if (matrix[vertex][i] > 0) {
+    // Process edges where vertex is the larger index
+    for (int i = 0; i < vertex; ++i) {
+        if (matrix[i][vertex] > 0) {
             if (layout[i] == currentComponent) {
-                costDiff += matrix[vertex][i];
+                // Edge will go from same component to different component
+                costDiff += matrix[i][vertex];
             } else if (layout[i] == newComponent) {
-                costDiff -= matrix[vertex][i];
+                // Edge will go from different component to same component
+                costDiff -= matrix[i][vertex];
             }
         }
     }
@@ -38,6 +52,7 @@ void InitializeLayout(
     std::unordered_map<int, int>& componentCounts,
     bool printOutput
 ) {
+    // Use sequential layout as the initial layout
     bestLayout = RunSequentialLayout(matrix, sizes, false);
     bestCost = NUtils::CalculateLayoutCost(matrix, bestLayout);
 
@@ -47,13 +62,24 @@ void InitializeLayout(
 
     currentLayout = bestLayout;
 
+    // Set the required component sizes
     for (int i = 0; i < sizes.size(); ++i) {
         componentSizes[i + 1] = sizes[i];
     }
 
+    // Count the number of vertices in each component
     componentCounts.clear();
     for (const auto& component : currentLayout) {
         componentCounts[component]++;
+    }
+    
+    // Verify that the initial layout has the correct component sizes
+    for (int i = 1; i <= sizes.size(); ++i) {
+        if (componentCounts[i] != componentSizes[i]) {
+            std::cerr << "Error: Initial layout has incorrect component sizes. "
+                      << "Component " << i << " has " << componentCounts[i]
+                      << " vertices, but should have " << componentSizes[i] << std::endl;
+        }
     }
 }
 
@@ -62,6 +88,8 @@ bool TrySwapVertices(
     TVector& currentLayout,
     TVector& bestLayout,
     double& bestCost,
+    std::unordered_map<int, int>& componentCounts,
+    std::unordered_map<int, int>& componentSizes,
     int iterations,
     bool printOutput
 ) {
@@ -75,8 +103,15 @@ bool TrySwapVertices(
 
             if (comp1 == comp2) continue;
 
+            // When swapping vertices between components, the component sizes remain the same
+            // So we don't need to check component sizes here
+
             currentLayout[v1] = comp2;
             currentLayout[v2] = comp1;
+
+            // Update component counts
+            // No need to update componentCounts since we're just swapping vertices
+            // The number of vertices in each component remains the same
 
             double newCost = NUtils::CalculateLayoutCost(matrix, currentLayout);
 
@@ -178,13 +213,15 @@ bool TryRandomMoves(
 
         if (comp1 == comp2) continue;
 
-        if (componentCounts[comp1] <= componentSizes[comp1] ||
-            componentCounts[comp2] <= componentSizes[comp2]) {
-            continue;
-        }
+        // When swapping vertices between components, the component sizes remain the same
+        // So we don't need to check component sizes here
 
         currentLayout[v1] = comp2;
         currentLayout[v2] = comp1;
+
+        // Update component counts
+        // No need to update componentCounts since we're just swapping vertices
+        // The number of vertices in each component remains the same
 
         double newCost = NUtils::CalculateLayoutCost(matrix, currentLayout);
 
@@ -244,7 +281,7 @@ void PrintFinalResults(
     }
 }
 
-TVector RunIterativeLayout(const TMatrix& matrix, const TVector& sizes, int maxIterations = 1000, bool printOutput = true) {
+std::pair<TVector, double> RunIterativeLayout(const TMatrix& matrix, const TVector& sizes, int maxIterations = 1000, bool printOutput = true) {
     if (printOutput) {
         std::cout << "Iterative Layout Algorithm\n";
         std::cout << "Sizes: ";
@@ -260,6 +297,7 @@ TVector RunIterativeLayout(const TMatrix& matrix, const TVector& sizes, int maxI
     std::unordered_map<int, int> componentSizes;
     std::unordered_map<int, int> componentCounts;
 
+    // Initialize layout with sequential algorithm
     InitializeLayout(
         matrix,
         sizes,
@@ -271,6 +309,10 @@ TVector RunIterativeLayout(const TMatrix& matrix, const TVector& sizes, int maxI
         printOutput
     );
 
+    // Store the original layout to restore if optimization fails
+    TVector originalLayout = bestLayout;
+    double originalCost = bestCost;
+
     int iterations = 0;
     int noImprovementCount = 0;
     const int maxNoImprovement = 10;
@@ -279,15 +321,19 @@ TVector RunIterativeLayout(const TMatrix& matrix, const TVector& sizes, int maxI
         iterations++;
         bool improvedThisIteration = false;
 
+        // Try to swap vertices
         improvedThisIteration |= TrySwapVertices(
             matrix,
             currentLayout,
             bestLayout,
             bestCost,
+            componentCounts,
+            componentSizes,
             iterations,
             printOutput
         );
 
+        // Try to move vertices
         improvedThisIteration |= TryMoveVertices(
             matrix,
             currentLayout,
@@ -299,6 +345,7 @@ TVector RunIterativeLayout(const TMatrix& matrix, const TVector& sizes, int maxI
             printOutput
         );
 
+        // Try random moves if no improvement
         if (!improvedThisIteration && noImprovementCount > maxNoImprovement / 2) {
             improvedThisIteration |= TryRandomMoves(
                 matrix,
@@ -313,15 +360,70 @@ TVector RunIterativeLayout(const TMatrix& matrix, const TVector& sizes, int maxI
         }
 
         if (improvedThisIteration) {
+            // Update componentCounts to match bestLayout
+            componentCounts.clear();
+            for (const auto& component : bestLayout) {
+                componentCounts[component]++;
+            }
+            
+            // Update currentLayout to match bestLayout
+            currentLayout = bestLayout;
+            
             noImprovementCount = 0;
         } else {
             noImprovementCount++;
         }
     }
 
+    // Verify that the final layout has the correct component sizes
+    std::unordered_map<int, int> finalComponentCounts;
+    for (const auto& component : bestLayout) {
+        finalComponentCounts[component]++;
+    }
+
+    // Get the actual component sizes
+    std::vector<int> actualSizes;
+    for (int i = 1; i <= sizes.size(); ++i) {
+        actualSizes.push_back(finalComponentCounts[i]);
+    }
+
+    // Get the expected component sizes
+    std::vector<int> expectedSizes(sizes.begin(), sizes.end());
+
+    // Sort both vectors to compare them regardless of order
+    std::sort(actualSizes.begin(), actualSizes.end());
+    std::sort(expectedSizes.begin(), expectedSizes.end());
+
+    // Check if the sorted vectors match
+    bool sizesMismatch = (actualSizes != expectedSizes);
+
+    if (sizesMismatch) {
+        if (printOutput) {
+            std::cerr << "Warning: Final layout has incorrect component sizes.\n";
+            std::cerr << "Expected sizes (sorted): ";
+            for (const auto& size : expectedSizes) {
+                std::cerr << size << " ";
+            }
+            std::cerr << "\nActual sizes (sorted): ";
+            for (const auto& size : actualSizes) {
+                std::cerr << size << " ";
+            }
+            std::cerr << std::endl;
+        }
+    }
+
+    // If sizes don't match, revert to original layout
+    if (sizesMismatch) {
+        if (printOutput) {
+            std::cout << "Reverting to original layout due to component size constraints.\n";
+        }
+        bestLayout = originalLayout;
+        bestCost = originalCost;
+    }
+
     if (printOutput) {
         PrintFinalResults(matrix, bestLayout, bestCost, iterations);
     }
 
-    return bestLayout;
+    return {bestLayout, bestCost};
 }

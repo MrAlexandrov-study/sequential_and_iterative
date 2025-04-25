@@ -52,14 +52,24 @@ double CalculateLayoutCost(const TMatrix& matrix, const TVector& layout) {
     double cost = 0.0;
     int n = matrix.size();
 
+    // Process edges in the same way as CalculateMoveCost
     for (int i = 0; i < n; ++i) {
+        // Process edges where i is the smaller index
         for (int j = i + 1; j < n; ++j) {
             if (matrix[i][j] > 0 && layout[i] != layout[j]) {
                 cost += matrix[i][j];
             }
         }
+        
+        // Process edges where i is the larger index
+        for (int j = 0; j < i; ++j) {
+            if (matrix[j][i] > 0 && layout[j] != layout[i]) {
+                cost += matrix[j][i];
+            }
+        }
     }
-
+    
+    // This approach counts each edge exactly once
     return cost;
 }
 

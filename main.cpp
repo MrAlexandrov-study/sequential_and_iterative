@@ -27,8 +27,7 @@ void RunLayoutAlgorithms(const TMatrix& matrix, const TVector& sizes) {
     std::cout << "Sequential layout cost: " << sequentialCost << "\n\n";
 
     std::cout << "=== Iterative Layout Algorithm ===\n";
-    TVector iterativeLayout = RunIterativeLayout(matrix, sizes);
-    double iterativeCost = NUtils::CalculateLayoutCost(matrix, iterativeLayout);
+    auto [iterativeLayout, iterativeCost] = RunIterativeLayout(matrix, sizes);
     std::cout << "Iterative layout cost: " << iterativeCost << "\n";
 
     std::cout << "\n=== Comparison ===\n";
